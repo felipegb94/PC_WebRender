@@ -37,22 +37,59 @@
         }
     }
 
+    function handleFilePathInput(path) 
+    {
+        var file = path;
+        if (file != null) 
+        {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) 
+                {
+                    data = results.data;
+                    cancelAnimationFrame(animationFrame);
+                    $("#container").empty();
+                    init();
+                }
+            });
+        }
+    }
+
     $(document).ready(function() 
     {
+
         $("#csv-file").change(handleFileSelect);
     });
 
+
+
 </script> 
+
+<script>
+    $( document ).on( "mousemove", function( event ) {
+        $( "#MouseCoordinates" ).text( "pageX: " + event.pageX + ", pageY: " + event.pageY );
+    });
+</script>
 
 </head> 
 
-<body>
+<body overflow="scroll">
 
     <h1> Point Cloud Render </h1>
-    Select a file: <input type = "file" id = "csv-file" name = "files" />
-    <p id = "MouseCoordinates"> </p> 
-    <div id = "container" align = "center"> </div> 
 
+    <table style="width:100%">
+        <tr>
+            <td>Select a file: <input type = "file" id = "csv-file" name = "files" /></div></td> 
+            <td rowspan="3"><div id = "container" > </div> </td>
+        </tr>
+        <tr>
+            <td><div id = "DebugInfo"></div></td> 
+        </tr>
+        <tr>
+            <td><p id = "MouseCoordinates"></p></td>
+        </tr>
+    </table>
     <script>
 
     var renderer, camera, scene, controls, PointCloud, PointCloudBoundary, axisHelper;
@@ -113,6 +150,11 @@
         PointCloudBoundaryMaterial.transparent = true;
         PointCloudBoundaryMaterial.opacity = 0.2;
 
+        var MaxBoundaryParticle = new THREE.Vector3(0, 0, 0);
+        var MinBoundaryParticle = new THREE.Vector3(0, 0, 0);;
+        var MaxFluidParticle = new THREE.Vector3(0, 0, 0);;
+        var MinFluidParticle = new THREE.Vector3(0, 0, 0);;
+
         for (var i = 0; i <numParticles; i++) 
         {
             point = data[i];
@@ -120,13 +162,74 @@
             /* Check if boundary or fluid particle to be able to draw them with different colors */
             if (point.TypeofParticle == -1) 
             {
-              PointCloudGeometry.vertices.push(vertex);
+                if(vertex.x > MaxFluidParticle.x)
+                {
+                    MaxFluidParticle.x = vertex.x;
+                }
+                if(vertex.y > MaxFluidParticle.y)
+                {
+                    MaxFluidParticle.y = vertex.y;
+                }                
+                if(vertex.z > MaxFluidParticle.z)
+                {
+                    MaxFluidParticle.z = vertex.z;
+                } 
+
+                if(vertex.x < MinFluidParticle.x)
+                {
+                    MinFluidParticle.x = vertex.x;
+                }
+                if(vertex.y < MinFluidParticle.y)
+                {
+                    MinFluidParticle.y = vertex.y;
+                }                
+                if(vertex.z < MinFluidParticle.z)
+                {
+                    MinFluidParticle.z = vertex.z;
+                }  
+
+                PointCloudGeometry.vertices.push(vertex);
             } 
             else if (point.TypeofParticle == 0) 
             {
-              PointCloudBoundaryGeometry.vertices.push(vertex);
+                if(vertex.x > MaxBoundaryParticle.x)
+                {
+                    MaxBoundaryParticle.x = vertex.x;
+                }
+                if(vertex.y > MaxBoundaryParticle.y)
+                {
+                    MaxBoundaryParticle.y = vertex.y;
+                }                
+                if(vertex.z > MaxBoundaryParticle.z)
+                {
+                    MaxBoundaryParticle.z = vertex.z;
+                } 
+
+                if(vertex.x < MinBoundaryParticle.x)
+                {
+                    MinBoundaryParticle.x = vertex.x;
+                }
+                if(vertex.y < MinBoundaryParticle.y)
+                {
+                    MinBoundaryParticle.y = vertex.y;
+                }                
+                if(vertex.z < MinBoundaryParticle.z)
+                {
+                    MinBoundaryParticle.z = vertex.z;
+                }  
+                PointCloudBoundaryGeometry.vertices.push(vertex);
             }
         }
+
+        var MaxParticleHTML= "<p><strong>Max Fluid Particle Coordinates:</strong>  x = " +  MaxFluidParticle.x + ",   y = " + MaxFluidParticle.y + ",   z = " + MaxFluidParticle.z + "</p>";
+
+        var MinParticleHTML= "<p><strong>Min Fluid Particle Coordinates:</strong>  x = " +  MinFluidParticle.x + ",   y = " + MinFluidParticle.y + ",   z = " + MinFluidParticle.z + "</p>";
+
+        var MaxBoundaryHTML= "<p><strong>Max Boundary Particle Coordinates:</strong>  x = " +  MaxBoundaryParticle.x + ",   y = " + MaxBoundaryParticle.y + ",   z = " + MaxBoundaryParticle.z + "</p>";
+
+        var MinBoundaryHTML= "<p><strong>Min Boundary Particle Coordinates:</strong>  x = " +  MinBoundaryParticle.x + ",   y = " + MinBoundaryParticle.y + ",   z = " + MinBoundaryParticle.z + "</p>";
+
+        $("#DebugInfo").html(MaxParticleHTML + MinParticleHTML + MaxBoundaryHTML + MinBoundaryHTML);
         /* Compute Bounding Boxes: FIGURE OUT WHAT THIS DOES!!!!!!!! */  
         PointCloudGeometry.computeBoundingSphere();
         PointCloudBoundaryGeometry.computeBoundingSphere();
@@ -157,18 +260,6 @@
         renderer.render(scene, camera);
     }
 
-    function showCoords(event) 
-    {
-        var x = window.event.clientX;
-        var y = window.event.clientY;
-        var coor = "X coords: " + x + ", Y coords: " + y;
-        document.getElementById("MouseCoordinates").innerHTML = coor;
-    }
-
-    function clearCoords() 
-    {
-        document.getElementById("MouseCoordinates").innerHTML = "";
-    }
 
 </script>
 
