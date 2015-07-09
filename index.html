@@ -1,237 +1,177 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-      }
-    </style>
-	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-	<script src="js/papaparse.min.js"></script>
-    <script src="js/three.min.js"></script>
-    <script src="js/TrackballControls.js"></script>
+<head>
+<style>
+    body 
+    {
+        margin: 0 px;
+        padding: 0 px;
+    } 
+</style> 
+<script src = "http://code.jquery.com/jquery-1.11.3.min.js"> </script> 
+<script src = "js/papaparse.min.js"> </script> 
+<script src = "js/three.min.js"> </script> 
+<script src = "js/TrackballControls.js"> </script>
 
+<script>
 
-    <script>
     var data;
     var input;
 
+    function handleFileSelect(evt) 
+    {
+        var file = evt.target.files[0];
+        if (file != null) 
+        {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) 
+                {
+                    data = results.data;
+                    cancelAnimationFrame(animationFrame);
+                    $("#container").empty();
+                    init();
+                }
+            });
+        }
+    }
 
+    $(document).ready(function() 
+    {
+        $("#csv-file").change(handleFileSelect);
+    });
 
-	function handleFileSelect(evt) {
-    	var file = evt.target.files[0];
-      if(file != null){
-    	 Papa.parse(file, {
-     	  	header: true,
-        		dynamicTyping: true,
-        		complete: function(results) 
-        		{
-  
-            		data = results.data;
-                cancelAnimationFrame(animationFrame);
-                $("#container").empty();
-  
-            		init();
-          		}
-        });
-      }
-	} 
-	$(document).ready(function()
-	{  
-		$("#csv-file").change(handleFileSelect);
+</script> 
 
- 	});
+</head> 
 
+<body>
+
+    <h1> Point Cloud Render </h1>
+    Select a file: <input type = "file" id = "csv-file" name = "files" />
+    <p id = "MouseCoordinates"> </p> 
+    <div id = "container" align = "center"> </div> 
+
+    <script>
+
+    var renderer, camera, scene, controls, PointCloud, PointCloudBoundary, axisHelper;
+    var animationFrame;
+
+    function init() 
+    {
+        console.log("Setting up the scene...");
+        var WIDTH = 800;
+        var HEIGHT = 600;
+        /* set some camera attributes */
+        var VIEW_ANGLE = 45;
+        var ASPECT = WIDTH / HEIGHT;
+        var NEAR = 0.001;
+        var FAR = 100;
+
+        /* get the DOM element to attach to */
+        /* assume we've got jQuery to hand */
+        var $container = $('#container');
+        /* Create renderer*/
+        renderer = new THREE.WebGLRenderer();
+        renderer.autoClear = true;
+        //renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(WIDTH, HEIGHT);
+        $container.append(renderer.domElement);
+
+        /* Create Camera */
+        camera = new THREE.PerspectiveCamera(VIEW_ANGLE,
+                                             ASPECT,
+                                             NEAR,
+                                             FAR);
+        camera.position.set(7, 7, 7);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        camera.position.z = 10;
+
+        /* Create controls for the camera. This allows us to zoom in and rotate the camera. */
+        controls = new THREE.TrackballControls(camera);
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 0.2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+
+        console.log("End of setting up the scene");
+        console.log("Generating Point Cloud...");
+
+        var numParticles = data.length - 1;
+        var PointCloudGeometry = new THREE.Geometry();
+        var PointCloudBoundaryGeometry = new THREE.Geometry();
+        var PointCloudMaterial = new THREE.PointCloudMaterial({color: 0x99CCFF,
+                                                               size: 0.1
+                                                              });
+        var PointCloudBoundaryMaterial = new THREE.PointCloudMaterial({color: 0xE6E6E6,
+                                                                       size: 0.1
+                                                                      });
+        PointCloudBoundaryMaterial.transparent = true;
+        PointCloudBoundaryMaterial.opacity = 0.2;
+
+        for (var i = 0; i <numParticles; i++) 
+        {
+            point = data[i];
+            var vertex = new THREE.Vector3(point.xPosition, point.yPosition, point.zPosition);
+            /* Check if boundary or fluid particle to be able to draw them with different colors */
+            if (point.TypeofParticle == -1) 
+            {
+              PointCloudGeometry.vertices.push(vertex);
+            } 
+            else if (point.TypeofParticle == 0) 
+            {
+              PointCloudBoundaryGeometry.vertices.push(vertex);
+            }
+        }
+        /* Compute Bounding Boxes: FIGURE OUT WHAT THIS DOES!!!!!!!! */  
+        PointCloudGeometry.computeBoundingSphere();
+        PointCloudBoundaryGeometry.computeBoundingSphere();
+        /* Create the PointClouds. PointCloudBoundary can be empty */
+        PointCloud = new THREE.PointCloud(PointCloudGeometry, PointCloudMaterial);
+        PointCloudBoundary = new THREE.PointCloud(PointCloudBoundaryGeometry, PointCloudBoundaryMaterial);
+    
+        console.log("End of Generating Point Cloud Geometry...");
+    
+        axisHelper = new THREE.AxisHelper(100);
+
+        scene = new THREE.Scene();
+        scene.add(PointCloudBoundary);
+        scene.add(PointCloud);
+        scene.add(axisHelper);
+        scene.add(camera);
+
+        /* Call recursive loop that allow us to animate the camera. */
+        animate();
+
+    } 
+
+    /* Recursive loop for camera! */
+    function animate() 
+    {
+      animationFrame = requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function showCoords(event) 
+    {
+        var x = window.event.clientX;
+        var y = window.event.clientY;
+        var coor = "X coords: " + x + ", Y coords: " + y;
+        document.getElementById("MouseCoordinates").innerHTML = coor;
+    }
+
+    function clearCoords() 
+    {
+        document.getElementById("MouseCoordinates").innerHTML = "";
+    }
 
 </script>
-  </head>
-  <body>
-  	<h1> Point Cloud Render </h1>
-    Select a file:  <input type="file" id="csv-file" name="files"  />
 
-    <p id="MouseCoordinates"></p>
-    <div id="container" align = "center"></div>
-    <script>
+</body> 
 
-    	var renderer, camera, scene, controls, PointCloud, axisHelper;
-      var animationFrame;
-
-    	function init()
-    	{
-
-    		console.log("Setting up the scene...");
-        // if(scene!=undefined){
-        //   scene.remove(renderer);
-        //   scene.remove(camera);
-        //   scene.remove(controls);
-        //   scene.remove(PointCloud);
-        //   scene.remove(axisHelper);
-        //   scene = undefined;
-        // }
-
-
-    		var WIDTH = 800;
-    		var HEIGHT = 600;
-
-			// set some camera attributes
-			  var VIEW_ANGLE = 45,
-			    	ASPECT = WIDTH / HEIGHT,
-			    	NEAR = 0.001,
-			    	FAR = 100;
-			
-			// get the DOM element to attach to
-			// - assume we've got jQuery to hand
-			var $container = $('#container');
-			renderer = new THREE.WebGLRenderer();
-      renderer.autoClear = true;
-			renderer.setSize( window.innerWidth, window.innerHeight );
-
-			camera = new THREE.PerspectiveCamera(VIEW_ANGLE,
-			    									 ASPECT,
-			    									 NEAR,
-			    									 FAR);
-			camera.position.set( 7, 7, 7 );
-			camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
-
-			scene = new THREE.Scene();	
-
-			scene.add(camera);
-			camera.position.z = 10;
-			renderer.setSize(WIDTH, HEIGHT);
-
-			$container.append(renderer.domElement);
-
-
-
-			console.log("End of setting up the scene");		
-			
-			// console.log("Creating a mesh...");
-
-			// // set up the sphere vars
-			// var radius = 50,
-			//     segments = 16,
-			//     rings = 16;
-
-   // 			var sphereMaterial = new THREE.MeshLambertMaterial({
-   //    															color: 0x99CCFF
-   //  															});			
-			// // create a new mesh with
-			// // sphere geometry - we will cover
-			// // the sphereMaterial next!
-			// var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius,
-			//     					 							 segments,
-			//     					 							 rings),
-			//   						    sphereMaterial);
-			
-			// // add the sphere to the scene
-			// //scene.add(sphere);
-   			
-
-
-			// console.log("End of Create Mesh..");
-
-
-    		console.log("Generating Point Cloud...");
-
-    		console.log("Generating Point Cloud Geometry...");
-
-    		var numParticles = data.length - 1;
-
-			var PointCloudGeometry = new THREE.Geometry();
-			var PointCloudMaterial = new THREE.PointCloudMaterial({ 
-    													   		   color: 0x99CCFF,
-    													   		   size: 0.1
-    													   		  });
-
-			console.log("NumParticles = ");
-			console.log(numParticles);
-        	for(var i = 0; i < numParticles;i++)
-        	{
-        		point = data[i];
-        		var vertex = new THREE.Vector3(point.xPosition, point.yPosition, point.zPosition);
-        		PointCloudGeometry.vertices.push(vertex);
-        	}
-        	PointCloudGeometry.computeBoundingSphere();
-
-        	PointCloud = new THREE.PointCloud(PointCloudGeometry, PointCloudMaterial);
-
-
-    		console.log("End of Generating Point Cloud Geometry...");
-    		scene.add(PointCloud);
-
-            axisHelper = new THREE.AxisHelper(100);
-            scene.add(axisHelper);
-   			// axes = buildAxes( 1000 );
-   			// scene.add(axes);
-
-   			console.log(camera);
-			controls = new THREE.TrackballControls( camera );
-			controls.rotateSpeed = 1.0;
-			controls.zoomSpeed = 0.2;
-			controls.panSpeed = 0.8;
-			
-			controls.noZoom = false;
-			controls.noPan = false;
-			
-			controls.staticMoving = true;
-			controls.dynamicDampingFactor = 0.3;
-
-			animate();
-
-    	}
-
-		function animate() 
-		{
-		    animationFrame = requestAnimationFrame( animate );
-		    controls.update();
-
-		    renderer.render( scene, camera );
-
-            //clearCoords();
-            //showCoords()
-
-		}
-
-function showCoords(event) {
-    var x = window.event.clientX;
-    var y = window.event.clientY;
-    var coor = "X coords: " + x + ", Y coords: " + y;
-    document.getElementById("MouseCoordinates").innerHTML = coor;
-}
-
-function clearCoords() {
-    document.getElementById("MouseCoordinates").innerHTML = "";
-}
-
-THREE.Object3D.prototype.clear = function(){
-    var children = this.children;
-    for(var i = children.length-1;i>=0;i--){
-        var child = children[i];
-        child.clear();
-        this.removeChild(child);
-    };
-};
-
-
-    </script>
-
-    <script>
-
-    // $("#csv-file").on("click", function () {
-    //   cancelAnimationFrame(animationFrame);
-    //   animationFrame = undefined;
-    // });
-
-    // $("#csv-file").on("change", function () {
-    //   cancelAnimationFrame(animationFrame);
-    //   animationFrame = undefined;
-
-    //   alert("CHANGING!");
-
-    // });
-     </script>
-
-
-  </body>
-</html> 
+</html>
