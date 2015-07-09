@@ -152,9 +152,9 @@
     /* Recursive loop for camera! */
     function animate() 
     {
-      animationFrame = requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+        animationFrame = requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
     }
 
     function showCoords(event) 
