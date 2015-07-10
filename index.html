@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+
 <style>
     body 
     {
@@ -8,80 +9,21 @@
         padding: 0 px;
     } 
 </style> 
-<script src = "http://code.jquery.com/jquery-1.11.3.min.js"> </script> 
-<script src = "js/papaparse.min.js"> </script> 
-<script src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"> </script> 
-<script src = "js/TrackballControls.js"> </script>
-
-<script>
-
-    var data;
-    var input;
-
-    function handleFileSelect(evt) 
-    {
-        var file = evt.target.files[0];
-        if (file != null) 
-        {
-            Papa.parse(file, {
-                header: true,
-                dynamicTyping: true,
-                complete: function(results) 
-                {
-                    data = results.data;
-                    cancelAnimationFrame(animationFrame);
-                    $("#container").empty();
-                    init();
-                }
-            });
-        }
-    }
-
-    function handleFilePathInput(path) 
-    {
-        var file = path;
-        if (file != null) 
-        {
-            Papa.parse(file, {
-                header: true,
-                dynamicTyping: true,
-                complete: function(results) 
-                {
-                    data = results.data;
-                    cancelAnimationFrame(animationFrame);
-                    $("#container").empty();
-                    init();
-                }
-            });
-        }
-    }
-
-    $(document).ready(function() 
-    {
-
-        $("#csv-file").change(handleFileSelect);
-    });
-
-
-
-</script> 
-
-<script>
-    $( document ).on( "mousemove", function( event ) {
-        $( "#MouseCoordinates" ).text( "pageX: " + event.pageX + ", pageY: " + event.pageY );
-    });
-</script>
 
 </head> 
 
 <body overflow="scroll">
 
     <h1> Point Cloud Render </h1>
-
+Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files" />
+                <button id="url-button" type="button">Submit</button>
     <table style="width:100%">
         <tr>
+            <td></td> 
+            <td rowspan="4"><div id = "container" > </div> </td>
+        </tr>
+        <tr>
             <td>Select a file: <input type = "file" id = "csv-file" name = "files" /></div></td> 
-            <td rowspan="3"><div id = "container" > </div> </td>
         </tr>
         <tr>
             <td><div id = "DebugInfo"></div></td> 
@@ -90,6 +32,12 @@
             <td><p id = "MouseCoordinates"></p></td>
         </tr>
     </table>
+
+    <script src = "http://code.jquery.com/jquery-1.11.3.min.js"> </script> 
+    <script src = "js/papaparse.min.js"> </script> 
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"> </script> 
+    <script src = "js/TrackballControls.js"> </script>
+
     <script>
 
     var renderer, camera, scene, controls, PointCloud, PointCloudBoundary, axisHelper;
@@ -261,7 +209,93 @@
     }
 
 
-</script>
+    </script>
+
+    <script>
+
+    var data;
+    var input;
+
+    function handleFileSelect(evt) 
+    {
+        var file = evt.target.files[0];
+        if (file != null) 
+        {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) 
+                {
+                    data = results.data;
+                    cancelAnimationFrame(animationFrame);
+                    $("#container").empty();
+                    init();
+                }
+            });
+        }
+    }
+    
+    function handleFilePathURL(url) 
+    {
+        alert(url);
+        if(ValidURL(url))
+        {
+            Papa.parse(url, {
+                download: true,
+                complete: function(results) 
+                {
+                    data = results.data;
+                    cancelAnimationFrame(animationFrame);
+                    $("#container").empty();
+                    init();                
+                }
+            });
+        }
+        else if(!ValidURL(url)){
+            alert("The input url is not a valid url");
+        }
+
+    }
+    
+    $(document).ready(function() 
+    {
+        /* Handle local files */
+        $("#csv-file").change(handleFileSelect);
+        /* Handle input url.. */
+        $("#url-button").click(function()
+        {
+            var url = $("#csv-file-url")[0].value;
+            handleFilePathURL(url); 
+        });
+
+    });
+    
+    /* Check if url is valid or not */
+    function ValidURL(str) 
+    {
+        var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+                                 '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+                                 '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+                                 '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+                                 '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+                                 '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+        if(!pattern.test(str)) 
+        {
+          return false;
+        }
+        else 
+        {
+          return true;
+        }
+    }
+
+    </script> 
+    
+    <script>
+    $( document ).on( "mousemove", function( event ) {
+        $( "#MouseCoordinates" ).text( "pageX: " + event.pageX + ", pageY: " + event.pageY );
+    });
+    </script>
 
 </body> 
 
