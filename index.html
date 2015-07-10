@@ -238,8 +238,8 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
     function handleFilePathURL(url) 
     {
         alert(url);
-        if(ValidURL(url))
-        {
+        //if(ValidURL(url))
+        //{
             Papa.parse(url, {
                 download: true,
                 complete: function(results) 
@@ -250,10 +250,10 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
                     init();                
                 }
             });
-        }
-        else if(!ValidURL(url)){
-            alert("The input url is not a valid url");
-        }
+        //}
+        //else if(!ValidURL(url)){
+        //    alert("The input url is not a valid url");
+        //}
 
     }
     
