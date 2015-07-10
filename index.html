@@ -237,14 +237,17 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
     
     function handleFilePathURL(url) 
     {
-        alert(url);
+        //alert(url);
         //if(ValidURL(url))
         //{
             Papa.parse(url, {
                 download: true,
+		header: true,
+		dynamicTyping: true,
                 complete: function(results) 
                 {
                     data = results.data;
+                    console.log(data);
                     cancelAnimationFrame(animationFrame);
                     $("#container").empty();
                     init();                
