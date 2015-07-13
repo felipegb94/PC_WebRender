@@ -103,10 +103,24 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
         var MaxFluidParticle = new THREE.Vector3(0, 0, 0);;
         var MinFluidParticle = new THREE.Vector3(0, 0, 0);;
 
+        /* Check for right input format */
+        p = data[0];
+        console.log(p);
+        if(p.hasOwnProperty('x') && 
+           p.hasOwnProperty('y') && 
+           p.hasOwnProperty('z'))
+        {
+            console.log("Points have the right properties");
+        }
+        else
+        {
+            throw "Invalid input format Exception";
+        }
+
         for (var i = 0; i <numParticles; i++) 
         {
             point = data[i];
-            var vertex = new THREE.Vector3(point.xPosition, point.yPosition, point.zPosition);
+            var vertex = new THREE.Vector3(point.x, point.y, point.z);
             /* Check if boundary or fluid particle to be able to draw them with different colors */
             if (point.TypeofParticle == -1) 
             {
@@ -165,6 +179,9 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
                 {
                     MinBoundaryParticle.z = vertex.z;
                 }  
+                PointCloudBoundaryGeometry.vertices.push(vertex);
+            }
+            else{
                 PointCloudBoundaryGeometry.vertices.push(vertex);
             }
         }
