@@ -21,9 +21,8 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
         <tr>
             <td>
                 <ul>
-                    <li><a href="meshToPointCloud.html">meshToPointCloud</a></li>
+                    <li><a href="meshLoader.html">meshLoader</a></li>
                     <li><a href="webgl_loader_stl.html">stl loader</a></li>
-                    <li><a href="stl_loader.html">stl loader</a></li>
 
                 </ul>
             </td> 
@@ -44,7 +43,9 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
     <script src = "js/papaparse.min.js"> </script> 
     <script src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"> </script> 
     <script src = "js/TrackballControls.js"> </script>
-
+        <script src="js/STLLoader.js"></script>
+        <script src="js/Detector.js"></script>
+        <script src="js/stats.min.js"></script>
     <script>
 
     var renderer, camera, scene, controls, PointCloud, PointCloudBoundary, SolidCloud, axisHelper;
@@ -52,6 +53,8 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
 
     function init() 
     {
+
+
         console.log("Setting up the scene...");
         var WIDTH = 800;
         var HEIGHT = 600;
@@ -95,26 +98,10 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
 
         var numParticles = data.length - 1;
         var PointCloudGeometry = new THREE.Geometry();
-        var PointCloudBoundaryGeometry = new THREE.Geometry();
-        var SolidCloudGeometry = new THREE.Geometry();
 
         var PointCloudMaterial = new THREE.PointCloudMaterial({color: 0x99CCFF,
                                                                size: 0.1
                                                               });
-        var PointCloudBoundaryMaterial = new THREE.PointCloudMaterial({color: 0xE6E6E6,
-                                                                       size: 0.1
-                                                                      });
-        var SolidCloudMaterial = new THREE.PointCloudMaterial({color: 0xFFA347,
-                                                                       size: 0.1
-                                                                      });  
-
-        PointCloudBoundaryMaterial.transparent = true;
-        PointCloudBoundaryMaterial.opacity = 0.2;
-
-        var MaxBoundaryParticle = new THREE.Vector3(0, 0, 0);
-        var MinBoundaryParticle = new THREE.Vector3(0, 0, 0);;
-        var MaxFluidParticle = new THREE.Vector3(0, 0, 0);;
-        var MinFluidParticle = new THREE.Vector3(0, 0, 0);;
 
         /* Check for right input format */
         p = data[0];
@@ -132,103 +119,35 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
 
         for (var i = 0; i <numParticles; i++) 
         {
-            point = data[i];
-            var vertex = new THREE.Vector3(point.x, point.y, point.z);
-            /* Check if boundary or fluid particle to be able to draw them with different colors */
-            if (point.TypeofParticle == -1) 
-            {
-                if(vertex.x > MaxFluidParticle.x)
-                {
-                    MaxFluidParticle.x = vertex.x;
-                }
-                if(vertex.y > MaxFluidParticle.y)
-                {
-                    MaxFluidParticle.y = vertex.y;
-                }                
-                if(vertex.z > MaxFluidParticle.z)
-                {
-                    MaxFluidParticle.z = vertex.z;
-                } 
 
-                if(vertex.x < MinFluidParticle.x)
-                {
-                    MinFluidParticle.x = vertex.x;
-                }
-                if(vertex.y < MinFluidParticle.y)
-                {
-                    MinFluidParticle.y = vertex.y;
-                }                
-                if(vertex.z < MinFluidParticle.z)
-                {
-                    MinFluidParticle.z = vertex.z;
-                }  
-
-                PointCloudGeometry.vertices.push(vertex);
-            } 
-            else if (point.TypeofParticle == 0) 
-            {
-                if(vertex.x > MaxBoundaryParticle.x)
-                {
-                    MaxBoundaryParticle.x = vertex.x;
-                }
-                if(vertex.y > MaxBoundaryParticle.y)
-                {
-                    MaxBoundaryParticle.y = vertex.y;
-                }                
-                if(vertex.z > MaxBoundaryParticle.z)
-                {
-                    MaxBoundaryParticle.z = vertex.z;
-                } 
-
-                if(vertex.x < MinBoundaryParticle.x)
-                {
-                    MinBoundaryParticle.x = vertex.x;
-                }
-                if(vertex.y < MinBoundaryParticle.y)
-                {
-                    MinBoundaryParticle.y = vertex.y;
-                }                
-                if(vertex.z < MinBoundaryParticle.z)
-                {
-                    MinBoundaryParticle.z = vertex.z;
-                }  
-                PointCloudBoundaryGeometry.vertices.push(vertex);
-            }
-            else{
-                SolidCloudGeometry.vertices.push(vertex);
-            }
         }
 
-        var MaxParticleHTML= "<p><strong>Max Fluid Particle Coordinates:</strong>  x = " +  MaxFluidParticle.x + ",   y = " + MaxFluidParticle.y + ",   z = " + MaxFluidParticle.z + "</p>";
 
-        var MinParticleHTML= "<p><strong>Min Fluid Particle Coordinates:</strong>  x = " +  MinFluidParticle.x + ",   y = " + MinFluidParticle.y + ",   z = " + MinFluidParticle.z + "</p>";
-
-        var MaxBoundaryHTML= "<p><strong>Max Boundary Particle Coordinates:</strong>  x = " +  MaxBoundaryParticle.x + ",   y = " + MaxBoundaryParticle.y + ",   z = " + MaxBoundaryParticle.z + "</p>";
-
-        var MinBoundaryHTML= "<p><strong>Min Boundary Particle Coordinates:</strong>  x = " +  MinBoundaryParticle.x + ",   y = " + MinBoundaryParticle.y + ",   z = " + MinBoundaryParticle.z + "</p>";
-
-        $("#DebugInfo").html(MaxParticleHTML + MinParticleHTML + MaxBoundaryHTML + MinBoundaryHTML);
         /* Compute Bounding Boxes: FIGURE OUT WHAT THIS DOES!!!!!!!! */  
         PointCloudGeometry.computeBoundingSphere();
-        PointCloudBoundaryGeometry.computeBoundingSphere();
-        SolidCloudGeometry.computeBoundingSphere();
+
 
         /* Create the PointClouds. PointCloudBoundary can be empty */
         PointCloud = new THREE.PointCloud(PointCloudGeometry, PointCloudMaterial);
-        PointCloudBoundary = new THREE.PointCloud(PointCloudBoundaryGeometry,PointCloudBoundaryMaterial);
-        SolidCloud = new THREE.PointCloud(SolidCloudGeometry, SolidCloudMaterial);
-    
+  
         console.log("End of Generating Point Cloud Geometry...");
     
         axisHelper = new THREE.AxisHelper(100);
 
         scene = new THREE.Scene();
-        scene.add(PointCloudBoundary);
         scene.add(PointCloud);
-        scene.add(SolidCloud);
         scene.add(axisHelper);
         scene.add(camera);
-
+        var loader = new THREE.STLLoader();
+                var material = new THREE.MeshPhongMaterial( { color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
+                loader.load( './meshes/Bucky_Bobble_Head_ME.STL', function ( geometry ) {
+                    var mesh = new THREE.Mesh( geometry, material );
+                    mesh.scale.set( 2, 2, 2 );
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    scene.add( mesh );
+                    console.log(geometry);
+                } );
         /* Call recursive loop that allow us to animate the camera. */
         animate();
 
@@ -276,8 +195,8 @@ Enter csv data file url: <input type = "text" id = "csv-file-url" name = "files"
         //{
             Papa.parse(url, {
                 download: true,
-		header: true,
-		dynamicTyping: true,
+        header: true,
+        dynamicTyping: true,
                 complete: function(results) 
                 {
                     data = results.data;

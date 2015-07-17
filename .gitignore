@@ -3,3 +3,13 @@ js/jquery.csv-0.71.min.js
 js/papaparse.min.js
 js/three.min.js
 TrackballControls.js
+meshes/Bucky_Bobble_Head_ME.STL
+meshes/ascii/pr2_head_pan.stl
+meshes/ascii/pr2_head_tilt.stl
+meshes/ascii/slotted_disk.stl
+meshes/binary/colored.stl
+meshes/binary/pr2_head_pan.stl
+meshes/binary/pr2_head_tilt.stl
+meshes/bucky.ply
+meshes/cube.ply
+meshes/cube.stl
