@@ -50,20 +50,20 @@
       // scene
       var scene = new THREE.Scene();
 
-      var sphereGeometry = new THREE.SphereGeometry(10);
-      sphereGeometry.computeBoundingBox();
-      console.log(sphereGeometry);
+      var ConeGeometry = new THREE.CylinderGeometry(0, 10, 30, 50, 1, true);
+      ConeGeometry.computeBoundingBox();
+      console.log(ConeGeometry);
 
-      // Sphere
-      var sphereObject = new THREE.Mesh(sphereGeometry, new THREE.MeshNormalMaterial());
-      sphereObject.overdraw = true;
-      scene.add(sphereObject);
-      console.log(sphereObject);
+      // Cone
+      var ConeObject = new THREE.Mesh(ConeGeometry, new THREE.MeshNormalMaterial());
+      ConeObject.overdraw = true;
+      scene.add(ConeObject);
+      console.log(ConeObject);
 
-      var box = new THREE.BoxHelper( sphereObject );
+      var box = new THREE.BoxHelper( ConeObject );
       scene.add( box );
 
-      var boundingBox = sphereGeometry.boundingBox;
+      var boundingBox = ConeGeometry.boundingBox;
       console.log(boundingBox);
 
       var min = boundingBox.min;
@@ -90,24 +90,27 @@
       // var raycaster = new THREE.Raycaster();
       // raycaster.set(insidePoint, direction);
       // console.log(raycaster);
-      // var intersects = raycaster.intersectObject(sphereObject);
+      // var intersects = raycaster.intersectObject(ConeObject);
       // console.log(intersects);
 
 
 
 
-      for(var i = min.x; i <= max.x; i++)
+      for(var i = min.x; i < max.x; i=i+1)
       {
-        for(var j = min.y; j <= max.y; j++)
+        for(var j = min.y; j < max.y; j=j+1)
         {
-          for(var k = min.z; k <= max.z; k++)
+          for(var k = min.z; k < max.z; k=k+1)
           {
+
             currPoint = new THREE.Vector3(i,j,k);
             direction.set(center.x - i, center.y - j, center.z - k);
             // IMPORTANT!! We have to normalize the direction in order for raycaster to work! 
             direction.normalize();
             raycaster.set(currPoint, direction);
-            intersect = raycaster.intersectObject(sphereObject);
+            intersect = raycaster.intersectObject(ConeObject);
+            console.log(intersect.length);
+
             if(intersect.length === 0)
             {
               currPoint.setX(i);
@@ -123,8 +126,8 @@
       //console.log(points);
 
 
-      // var csvString = VerticesToCSV(points);
-      // DownloadCSV(csvString);
+      var csvString = VerticesToCSV(points);
+      DownloadCSV(csvString);
 
 
       // start animation

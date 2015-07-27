@@ -13,3 +13,6 @@ meshes/binary/pr2_head_tilt.stl
 meshes/bucky.ply
 meshes/cube.ply
 meshes/cube.stl
+js/Projector.js
+js/dat.gui.js
+js/font.typeface.js
