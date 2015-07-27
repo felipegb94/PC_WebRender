@@ -10,9 +10,11 @@
   </head>
   <body>
     <div id="container"></div>
-      <script src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"> </script> 
+      <script src = "js/three.min.js"> </script> 
       <script src="js/BoxHelper.js"></script>
       <script src="js/BoundingBoxHelper.js"></script>
+      <script src = "js/papaparse.min.js"> </script> 
+
       <script defer="defer">
       // revolutions per second
       var angularSpeed = 0.2; 
@@ -48,14 +50,14 @@
       // scene
       var scene = new THREE.Scene();
 
-      var sphereGeometry = new THREE.SphereGeometry(10, 10, 10);
+      var sphereGeometry = new THREE.SphereGeometry(10);
       sphereGeometry.computeBoundingBox();
       console.log(sphereGeometry);
 
       // Sphere
       var sphereObject = new THREE.Mesh(sphereGeometry, new THREE.MeshNormalMaterial());
       sphereObject.overdraw = true;
-      scene.add(sphereObject);
+      //scene.add(sphereObject);
       console.log(sphereObject);
 
       var box = new THREE.BoxHelper( sphereObject );
@@ -67,18 +69,59 @@
       var min = boundingBox.min;
       var max = boundingBox.max;
       var center = boundingBox.center();
-      console.log(max);
-      var direction = new THREE.Vector3(center.x - max.x, center.y - max.y, center.z-max.z);
-      console.log(direction); 
-      /* IMPORTANT!! We have to normalize the direction in order for raycaster to work! */
-      direction.normalize();
-      console.log(direction);
-
+      var currPoint = new THREE.Vector3(0,0,0);
+      var direction = new THREE.Vector3(0,0,0);
+      var intersect;
       var raycaster = new THREE.Raycaster();
-      raycaster.set(max, direction);
-      console.log(raycaster);
-      var intersects = raycaster.intersectObject(sphereObject);
-      console.log(intersects);
+      var points = [];
+
+      var PointCloudGeometry = new THREE.Geometry();
+      var PointCloudMaterial = new THREE.PointCloudMaterial({color: 0x99CCFF,
+                                                             size: 2
+                                                            });
+      // console.log(max);
+      // var insidePoint = new THREE.Vector3(1,1,1);
+      // var outsidePoint = new THREE.Vector3(9,9,9);
+
+      // var direction = new THREE.Vector3(center.x - outsidePoint.x, center.y - outsidePoint.y, center.z - outsidePoint.z);
+      // console.log(direction); 
+      // // IMPORTANT!! We have to normalize the direction in order for raycaster to work! 
+      // direction.normalize();
+      // console.log(direction);
+
+      // var raycaster = new THREE.Raycaster();
+      // raycaster.set(outsidePoint, direction);
+      // console.log(raycaster);
+      // var intersects = raycaster.intersectObject(sphereObject);
+      //console.log(intersects);
+
+
+
+
+      for(var i = min.x; i <= max.x; i++)
+      {
+        for(var j = min.y; j <= max.y; j++)
+        {
+          for(var k = min.z; k <= max.z; k++)
+          {
+            currPoint.set(i,j,k);
+            direction.set(center.x - i, center.y - j, center.z - k);
+            direction.normalize();
+            raycaster.set(currPoint, direction);
+            intersect = raycaster.intersectObject(sphereObject);
+            if(intersect.length === 0)
+            {
+              points.push(currPoint);
+              PointCloudGeometry.vertices.push(currPoint);
+              //console.log(currPoint);
+            }
+          }    
+        }
+      }
+      var PointCloud = new THREE.PointCloud(PointCloudGeometry, PointCloudMaterial);
+      console.log(PointCloud);
+      scene.add(PointCloud);
+
 
       // start animation
       animate();
