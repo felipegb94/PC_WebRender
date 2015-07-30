@@ -50,7 +50,7 @@
       // scene
       var scene = new THREE.Scene();
 
-      var TorusGeometry = new THREE.TorusGeometry(5,2,20,20);
+      var TorusGeometry = new THREE.TorusGeometry(5,2,20,20,3);
       TorusGeometry.computeBoundingBox();
       console.log(TorusGeometry);
 
@@ -114,7 +114,7 @@
             intersect = raycaster.intersectObject(TorusObject);
             console.log(intersect.length);
 
-            if((intersect.length % 2) != 0)
+            if((intersect.length % 2) != 1)
             {
               currPoint.setX(i);
               currPoint.setY(j);

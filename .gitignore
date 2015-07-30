@@ -16,3 +16,11 @@ meshes/cube.stl
 js/Projector.js
 js/dat.gui.js
 js/font.typeface.js
+meshes/bucky.pcd
+meshes/bucky_ascii.csv
+meshes/bucky_ascii.pcd
+meshes/bucky_ascii.ply
+meshes/cube.csv
+meshes/cube.pcd
+other/cube.pcd
+other/cube.ply
